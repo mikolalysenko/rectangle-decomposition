@@ -1,0 +1,39 @@
+{
+  "name": "rectangle-decomposition",
+  "version": "0.0.0",
+  "description": "Minimal decomposition of rectilinear polygons into rectangles",
+  "main": "decomp.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bipartite-independent-set": "~0.0.0",
+    "interval-tree-1d": "~0.0.0",
+    "dup": "~0.0.0"
+  },
+  "devDependencies": {
+    "tape": "~2.3.2",
+    "tap": "~0.4.8"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mikolalysenko/rectangle-decomposition.git"
+  },
+  "keywords": [
+    "rectangle",
+    "rectilinear",
+    "polygon",
+    "decomposition",
+    "mesh",
+    "optimal"
+  ],
+  "author": "Mikola Lysenko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mikolalysenko/rectangle-decomposition/issues"
+  },
+  "homepage": "https://github.com/mikolalysenko/rectangle-decomposition"
+}
