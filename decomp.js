@@ -2,7 +2,6 @@
 
 var bipartiteIndependentSet = require("bipartite-independent-set")
 var createIntervalTree = require("interval-tree-1d")
-var util = require("util")
 var dup = require("dup")
 
 module.exports = decomposeRegion
