@@ -13,7 +13,8 @@
   },
   "devDependencies": {
     "tape": "~2.3.2",
-    "tap": "~0.4.8"
+    "tap": "~0.4.8",
+    "boxoverlap": "0.0.3"
   },
   "scripts": {
     "test": "tap test/*.js"

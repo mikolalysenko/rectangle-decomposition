@@ -70,6 +70,7 @@ function getDiagonals(vertices, paths, direction, tree) {
         }
       }
       if(!testSegment(a, b, tree, direction)) {
+        //Check orientation of diagonal
         diagonals.push(new Segment(a, b, direction))
       }
     }
@@ -84,8 +85,8 @@ function findCrossings(hdiagonals, vdiagonals) {
   for(var i=0; i<vdiagonals.length; ++i) {
     var v = vdiagonals[i]
     htree.queryPoint(v.start[1], function(h) {
-      var x = h.start[0]
-      if(v[0] < x && x < v[1]) {
+      var x = h.start.point[0]
+      if(v[0] <= x && x <= v[1]) {
         crossings.push([v, h])
       }
     })
@@ -96,6 +97,13 @@ function findCrossings(hdiagonals, vdiagonals) {
 function findSplitters(hdiagonals, vdiagonals) {
   //First find crossings
   var crossings = findCrossings(hdiagonals, vdiagonals)
+
+  /*
+  console.log("crossings=", crossings.map(function(c) { 
+    return "{[" + c[0].start.point + "],[" + c[0].end.point + "]}-{[" +
+             c[1].start.point + "],[" + c[1].end.point + "]}"
+          }))
+  */
 
   //Then tag and convert edge format
   for(var i=0; i<hdiagonals.length; ++i) {
@@ -126,28 +134,70 @@ function findSplitters(hdiagonals, vdiagonals) {
 }
 
 function splitSegment(segment) {
-  //Make clones of vertices
+  //Store references
   var a = segment.start
   var b = segment.end
-  var aa = new Vertex(a.point, a.path, a.index, false)
-  var bb = new Vertex(b.point, b.path, b.index, false)
+  var pa = a.prev
+  var na = a.next
+  var pb = b.prev
+  var nb = b.next
 
   //Fix concavity
   a.concave = false
   b.concave = false
 
-  //Split lists
-  aa.prev = a.prev
-  aa.next = bb
-  bb.prev = aa
-  bb.next = b.next
-  aa.prev.next = aa
-  bb.next.prev = bb
-  a.prev = b
-  b.next = a
+  //console.log("splitting:", pa.point, a.point, na.point, "vs", pb.point, b.point, nb.point)
 
-  //Return new vertices
-  return [aa, bb]
+  //Compute orientation
+  var ao = pa.point[segment.direction] === a.point[segment.direction]
+  var bo = pb.point[segment.direction] === b.point[segment.direction]
+
+  if(ao && bo) {
+    //Case 1:
+    //            ^
+    //            |
+    //  --->A+++++B<---
+    //      |
+    //      V
+    a.prev = pb
+    pb.next = a
+    b.prev = pa
+    pa.next = b
+  } else if(ao && !bo) {
+    //Case 2:
+    //      ^     |
+    //      |     V
+    //  --->A+++++B--->
+    //            
+    //            
+    a.prev = b
+    b.next = a
+    pa.next = nb
+    nb.prev = pa
+  } else if(!ao && bo) {
+    //Case 3:
+    //            
+    //            
+    //  <---A+++++B<---
+    //      ^     |
+    //      |     V
+    a.next = b
+    b.prev = a
+    na.prev = pb
+    pb.next = na
+
+  } else if(!ao && !bo) {
+    //Case 3:
+    //            |
+    //            V
+    //  <---A+++++B--->
+    //      ^     
+    //      |     
+    a.next = nb
+    nb.prev = a
+    b.next = na
+    na.prev = b
+  }
 }
 
 function findLoops(vertices) {
@@ -195,10 +245,10 @@ function splitConcave(vertices) {
     var y = v.point[1]
     var direction
     if(v.prev.point[0] === v.point[0]) {
-      console.log("here-prev", v.prev.point, v.point, v.next.point)
+      //console.log("here-prev", v.prev.point, v.point, v.next.point)
       direction = v.prev.point[1] < y
     } else {
-      console.log("here-next", v.prev.point, v.point, v.next.point)
+      //console.log("here-next", v.prev.point, v.point, v.next.point)
       direction = v.next.point[1] < y
     }
     direction = direction ? 1 : -1
@@ -208,7 +258,7 @@ function splitConcave(vertices) {
     var closestDistance = Infinity * direction
     tree.queryPoint(v.point[0], function(h) {
       var x = h.start.point[1]
-      console.log(h[0], v.point[0], h[1], x, y, direction, closestDistance)
+      //console.log(h[0], v.point[0], h[1], x, y, direction, closestDistance)
       if(direction > 0) {
         if(x > y && x < closestDistance) {
           closestDistance = x
@@ -222,13 +272,13 @@ function splitConcave(vertices) {
       }
     })
 
-    console.log("casting ray: v=", v.point, closestSegment.start.point, closestSegment.end.point)
+    //console.log("casting ray: v=", v.point, closestSegment.start.point, closestSegment.end.point)
 
     //Create two splitting vertices
     var splitA = new Vertex([v.point[0], closestDistance], 0, 0, false)
     var splitB = new Vertex([v.point[0], closestDistance], 0, 0, false)
 
-    console.log("split=", splitA.point)
+    //console.log("split=", splitA.point)
     //Clear concavity flag
     v.concave = false
 
@@ -246,44 +296,27 @@ function splitConcave(vertices) {
     //Append vertices
     vertices.push(splitA, splitB)
 
-    //Cut v, 4 different cases
-    if(direction < 0) {
-      if(v.prev.point[0] === v.point[0]) {
-        // Case 1
-        // --->*  
-        //     |
-        //     |
-        //     V
-        splitA.next = v
-        splitB.prev = v.prev
-      } else {
-        // Case 2
-        //     |
-        //     |
-        //     V
-        // <---*
-        splitA.next = v.next
-        splitB.prev = v
-      }
+    //Cut v, 2 different cases
+    if(v.prev.point[0] === v.point[0]) {
+      // Case 1
+      //             ^
+      //             |
+      // --->*+++++++X
+      //     |       |
+      //     V       |
+      splitA.next = v
+      splitB.prev = v.prev
     } else {
-      if(v.prev.point[0] === v.point[0]) {
-        // Case 3
-        // *<---
-        // |
-        // |
-        // V
-        splitA.next = v
-        splitB.prev = v.prev
-      } else {
-        // Case 4
-        // |
-        // |
-        // V
-        // *--->
-        splitA.next = v.next
-        splitB.prev = v
-      }
+      // Case 2
+      //     |       |
+      //     V       |
+      // <---*+++++++X
+      //             |
+      //             V
+      splitA.next = v.next
+      splitB.prev = v
     }
+
     //Fix up links
     splitA.next.prev = splitA
     splitB.prev.next = splitB
@@ -294,12 +327,11 @@ function splitConcave(vertices) {
   var result = new Array(loops.length)
   for(var i=0; i<loops.length; ++i) {
     var L = loops[i]
-    var lo = [Infinity, Infinity]
-    var hi = [-Infinity, -Infinity]
+    var lo = [ Infinity, Infinity]
+    var hi = [-Infinity,-Infinity]
     result[i] = [lo, hi]
     for(var j=0; j<L.length; ++j) {
       var v = L[j].point
-      console.log(j, v)
       for(var k=0; k<2; ++k) {
         lo[k] = Math.min(lo[k], v[k])
         hi[k] = Math.max(hi[k], v[k])
@@ -309,40 +341,61 @@ function splitConcave(vertices) {
   return result
 }
 
-function decomposeRegion(paths) {
-  //First step: unpack all vertices into internal format
-  var numVertices = 0
-  for(var i=0; i<paths.length; ++i) {
-    numVertices += paths[i].length
+function decomposeRegion(paths, clockwise) {
+  if(!Array.isArray(paths)) {
+    throw new Error("rectangle-decomposition: Must specify list of loops")
   }
-  var vertices = new Array(numVertices)
+
+  //Coerce to boolean type
+  clockwise = !!clockwise
+
+  //First step: unpack all vertices into internal format
+  var vertices = []
   var ptr = 0
   var npaths = new Array(paths.length)
   for(var i=0; i<paths.length; ++i) {
     var path = paths[i]
+    if(!Array.isArray(path)) {
+      throw new Error("rectangle-decomposition: Loop must be array type")
+    }
     var n = path.length
-    var prev = path[n-2]
-    var cur = path[n-1]
-    npaths[i] = new Array(paths[i].length)
+    var prev = path[n-3]
+    var cur = path[n-2]
+    var next = path[n-1]
+    npaths[i] = []
     for(var j=0; j<n; ++j) {
-      var next = path[j]
+      prev = cur
+      cur = next
+      next = path[j]
+      if(!Array.isArray(next) || next.length !== 2) {
+        throw new Error("rectangle-decomposition: Must specify list of loops")
+      }
       var concave = false
       if(prev[0] === cur[0]) {
+        if(next[0] === cur[0]) {
+          continue
+        }
         var dir0 = prev[1] < cur[1]
         var dir1 = cur[0] < next[0]
         concave = dir0 === dir1
       } else {
+        if(next[1] === cur[1]) {
+          continue
+        }
         var dir0 = prev[0] < cur[0]
         var dir1 = cur[1] < next[1]
         concave = dir0 !== dir1
       }
-      npaths[i][j] = vertices[ptr++] = new Vertex(
+      if(clockwise) {
+        concave = !concave
+      }
+      var vtx = new Vertex(
         cur,
         i,
         (j + n - 1)%n,
         concave)
-      prev = cur
-      cur = next
+      npaths[i].push(vtx)
+      vertices.push(vtx)
     }
   }
 
@@ -359,8 +412,14 @@ function decomposeRegion(paths) {
       } else {
         vsegments.push(new Segment(a,b,1))
       }
-      a.next = b
-      b.prev = a
+      if(clockwise) {
+        a.prev = b
+        b.next = a
+      } else {
+        a.next = b
+        b.prev = a
+      }
+      //  console.log(a.point, a.concave)
     }
   }
   var htree = createIntervalTree(hsegments)
@@ -372,15 +431,27 @@ function decomposeRegion(paths) {
 
   //Find all splitting edges
   var splitters = findSplitters(hdiagonals, vdiagonals)
+  /*
+  console.log("splitters = ", splitters.map(function(h) {
+    return [h.start.point, h.end.point]
+  }))
+*/
 
   //Cut all the splitting diagonals
   for(var i=0; i<splitters.length; ++i) {
-    var s = splitSegment(splitters[i])
-    vertices.push(s[0], s[1])
+    splitSegment(splitters[i])
   }
 
   //Cut out loops
   var loops = findLoops(vertices)
+  /*
+  console.log("loops = ", loops.map(function(l) {
+    return "(" + l.map(function(v) {
+      return v.point
+    }).join(")-(") + ")"
+  }))
+  */
+
   var regions = []
   for(var i=0; i<loops.length; ++i) {
     regions.push.apply(regions, splitConcave(loops[i]))
