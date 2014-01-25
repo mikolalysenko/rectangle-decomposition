@@ -68,7 +68,9 @@ console.log(rectangles)
 npm install rectangle-decomposition
 ```
 
-## `require("rectangle-decomposition")(loops[, clockwise=false])`
+## API
+
+### `require("rectangle-decomposition")(loops[, clockwise=false])`
 Decomposes the polygon defined by the list of loops into a collection of rectangles.
 
 * `loops` is an array of loops vertices representing the boundary of the region.  Each loop must be a simple rectilinear polygon (ie no self intersections), and the line segments of any two loops must only meet at vertices.  The collection of loops must also be bounded.
