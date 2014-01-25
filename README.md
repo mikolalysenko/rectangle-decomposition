@@ -16,6 +16,50 @@ This code is 100% JavaScript and works in both node.js and in a browser via [bro
 ```javascript
 var decompose = require("rectangle-decomposition")
 
+//First create a region:
+//
+//   *-----*
+//   |     |
+// *-*     |
+// |       |
+// | *-*   |
+// | | |   |
+// | *-*   |
+// |       |
+// *-------*
+//
+//Regions are defined by lists of loops, default oriented counter clockwise
+//
+var region = [  
+  [[1,1], [1,2], [2,2], [2,1]],
+  [[0,0], [4,0], [4,4], [1,4], [1,3], [0,3]]]
+
+//Next, extract rectangles
+//
+var rectangles = decompose(region)
+
+console.log(rectangles)
+
+//Prints out:
+//
+//  [ [ [ 1, 0 ], [ 2, 1 ] ],
+//    [ [ 0, 0 ], [ 1, 3 ] ],
+//    [ [ 2, 0 ], [ 4, 4 ] ],
+//    [ [ 1, 2 ], [ 2, 4 ] ] ]
+//
+
+//Equivalent to the following decomposition:
+//
+//   *-----*
+//   | !   |
+// *-* !   |
+// | ! !   |
+// | *-*   |
+// | | |   |
+// | *-*   |
+// | ! !   |
+// *-------*
+//
 ```
 
 ## Install
