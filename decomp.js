@@ -98,13 +98,6 @@ function findSplitters(hdiagonals, vdiagonals) {
   //First find crossings
   var crossings = findCrossings(hdiagonals, vdiagonals)
 
-  /*
-  console.log("crossings=", crossings.map(function(c) { 
-    return "{[" + c[0].start.point + "],[" + c[0].end.point + "]}-{[" +
-             c[1].start.point + "],[" + c[1].end.point + "]}"
-          }))
-  */
-
   //Then tag and convert edge format
   for(var i=0; i<hdiagonals.length; ++i) {
     hdiagonals[i].number = i
@@ -145,8 +138,6 @@ function splitSegment(segment) {
   //Fix concavity
   a.concave = false
   b.concave = false
-
-  //console.log("splitting:", pa.point, a.point, na.point, "vs", pb.point, b.point, nb.point)
 
   //Compute orientation
   var ao = pa.point[segment.direction] === a.point[segment.direction]
@@ -245,10 +236,8 @@ function splitConcave(vertices) {
     var y = v.point[1]
     var direction
     if(v.prev.point[0] === v.point[0]) {
-      //console.log("here-prev", v.prev.point, v.point, v.next.point)
       direction = v.prev.point[1] < y
     } else {
-      //console.log("here-next", v.prev.point, v.point, v.next.point)
       direction = v.next.point[1] < y
     }
     direction = direction ? 1 : -1
@@ -258,7 +247,6 @@ function splitConcave(vertices) {
     var closestDistance = Infinity * direction
     tree.queryPoint(v.point[0], function(h) {
       var x = h.start.point[1]
-      //console.log(h[0], v.point[0], h[1], x, y, direction, closestDistance)
       if(direction > 0) {
         if(x > y && x < closestDistance) {
           closestDistance = x
@@ -272,13 +260,10 @@ function splitConcave(vertices) {
       }
     })
 
-    //console.log("casting ray: v=", v.point, closestSegment.start.point, closestSegment.end.point)
-
     //Create two splitting vertices
     var splitA = new Vertex([v.point[0], closestDistance], 0, 0, false)
     var splitB = new Vertex([v.point[0], closestDistance], 0, 0, false)
 
-    //console.log("split=", splitA.point)
     //Clear concavity flag
     v.concave = false
 
@@ -308,11 +293,11 @@ function splitConcave(vertices) {
       splitB.prev = v.prev
     } else {
       // Case 2
-      //     |       |
+      //     |       ^
       //     V       |
       // <---*+++++++X
       //             |
-      //             V
+      //             |
       splitA.next = v.next
       splitB.prev = v
     }
@@ -419,7 +404,6 @@ function decomposeRegion(paths, clockwise) {
         a.next = b
         b.prev = a
       }
-      //  console.log(a.point, a.concave)
     }
   }
   var htree = createIntervalTree(hsegments)
@@ -431,12 +415,7 @@ function decomposeRegion(paths, clockwise) {
 
   //Find all splitting edges
   var splitters = findSplitters(hdiagonals, vdiagonals)
-  /*
-  console.log("splitters = ", splitters.map(function(h) {
-    return [h.start.point, h.end.point]
-  }))
-*/
-
+  
   //Cut all the splitting diagonals
   for(var i=0; i<splitters.length; ++i) {
     splitSegment(splitters[i])
@@ -444,24 +423,11 @@ function decomposeRegion(paths, clockwise) {
 
   //Cut out loops
   var loops = findLoops(vertices)
-  /*
-  console.log("loops = ", loops.map(function(l) {
-    return "(" + l.map(function(v) {
-      return v.point
-    }).join(")-(") + ")"
-  }))
-  */
-
+  
   var regions = []
   for(var i=0; i<loops.length; ++i) {
     regions.push.apply(regions, splitConcave(loops[i]))
   }
-
-/*
-  console.log("horiz:", util.inspect(hdiagonals, {depth:10}))
-  console.log("vert:", util.inspect(vdiagonals, {depth:10}))
-  console.log("splitters:", util.inspect(splitters, {depth:10}))
-*/
 
   return regions  
 }
