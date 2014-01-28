@@ -10,7 +10,6 @@ tape("rectilinear-decomposition", function(t) {
 
   function verifyDecomp(paths, ccw, expected) {
     var rectangles = decomp(paths, ccw)
-    console.log("rect = ", rectangles)
     if(typeof expected !== "undefined") {
       t.equals(rectangles.length, expected, "expected number of boxes")
     }
