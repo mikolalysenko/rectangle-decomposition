@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "bipartite-independent-set": "~0.0.0",
-    "interval-tree-1d": "~0.0.0",
+    "interval-tree-1d": "~0.0.1",
     "dup": "~0.0.0"
   },
   "devDependencies": {

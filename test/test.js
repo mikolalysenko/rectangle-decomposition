@@ -74,18 +74,9 @@ tape("rectilinear-decomposition", function(t) {
   //Test with a bitmap image  
   function bmp(image, expected) {
     var paths = contour(pack(image), true)
-    console.log(paths)
     test(paths, false, expected)
   }
 
-
-  bmp([
-      [0, 1, 0, 0, 0, 1],
-      [1, 1, 1, 1, 0, 0],
-      [1, 0, 0, 1, 0, 0]
-    ], 5)
-
-  /*  
   bmp([
     [1]
     ], 1)
@@ -134,6 +125,17 @@ tape("rectilinear-decomposition", function(t) {
       [1, 1, 1, 0, 0, 1]
     ])
 
+  bmp([
+      [0, 1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 0, 0],
+      [1, 0, 0, 1, 0, 0]
+    ], 5)
+
+  bmp([
+      [0, 1, 0, 1, 0],
+      [1, 1, 0, 1, 1],
+    ], 4)
+  
   bmp([
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
       [1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
@@ -273,10 +275,6 @@ tape("rectilinear-decomposition", function(t) {
     [2,0]
   ]
   test([bracket], true, 2)
-  */
-
-
-
-
+  
   t.end()
 })

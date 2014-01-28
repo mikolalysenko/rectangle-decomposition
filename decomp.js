@@ -33,9 +33,11 @@ function Segment(start, end, direction) {
 }
 
 function testSegment(a, b, tree, direction) {
+  var ax = a.point[direction^1]
+  var bx = b.point[direction^1]
   return !!tree.queryPoint(a.point[direction], function(s) {
-    var x = s.start[direction]
-    if(a.point[direction] < x && x < b.point[direction]) {
+    var x = s.start.point[direction^1]
+    if(ax < x && x < bx) {
       return true
     }
     return false
