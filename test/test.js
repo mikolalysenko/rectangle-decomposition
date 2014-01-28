@@ -2,13 +2,18 @@
 
 var decomp = require("../decomp")
 var tape = require("tape")
+var contour = require("contour-2d")
+var pack = require("ndarray-pack")
 var boxOverlap = require("boxoverlap")
 
 tape("rectilinear-decomposition", function(t) {
 
   function verifyDecomp(paths, ccw, expected) {
     var rectangles = decomp(paths, ccw)
-    t.equals(rectangles.length, expected, "expected number of boxes")
+    console.log("rect = ", rectangles)
+    if(typeof expected !== "undefined") {
+      t.equals(rectangles.length, expected, "expected number of boxes")
+    }
     t.same(boxOverlap(rectangles).filter(function(x) {
       var a = rectangles[x[0]]
       var b = rectangles[x[1]]
@@ -43,6 +48,8 @@ tape("rectilinear-decomposition", function(t) {
     for(var i=0; i<rectangles.length; ++i) {
       var r = rectangles[i]
       boxarea += (r[1][0] - r[0][0]) * (r[1][1] - r[0][1])
+      t.ok(r[0][0] < r[1][0], "checking bounds consistent")
+      t.ok(r[0][1] < r[1][1], "checking bounds consistent")
     }
     t.same(boxarea, area, "areas match")
 
@@ -51,8 +58,8 @@ tape("rectilinear-decomposition", function(t) {
 
   function test(paths, ccw, expected) {
     //Check all 4 orientations
-    for(var sx=-1; sx<=1; sx+=2)
-    for(var sy=-1; sy<=1; sy+=2)
+    for(var sx=1; sx>=-1; sx-=2)
+    for(var sy=1; sy>=-1; sy-=2)
     {
       var npaths = paths.map(function(path) {
         return path.map(function(v) {
@@ -63,7 +70,92 @@ tape("rectilinear-decomposition", function(t) {
       verifyDecomp(npaths, nccw, expected)
     }
   }
-  
+
+  //Test with a bitmap image  
+  function bmp(image, expected) {
+    var paths = contour(pack(image), true)
+    console.log(paths)
+    test(paths, false, expected)
+  }
+
+
+  bmp([
+      [0, 1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 0, 0],
+      [1, 0, 0, 1, 0, 0]
+    ], 5)
+
+  /*  
+  bmp([
+    [1]
+    ], 1)
+
+  bmp([
+    [1, 0, 1],
+    [1, 1, 1]
+    ], 3)
+
+  bmp([
+    [1, 1, 0, 1],
+    [0, 1, 1, 1]
+    ], 3)
+
+  bmp([
+    [1, 1, 0, 1, 1],
+    [0, 1, 1, 1, 0],
+    [1, 1, 0, 1, 1]
+    ], 5)
+
+  bmp([
+    [1,1,1,1,1],
+    [1,0,1,0,1],
+    [1,1,1,1,1]], 5)
+
+  bmp([
+      [0, 1, 0, 0],
+      [0, 1, 1, 1],
+      [0, 1, 0, 1],
+      [1, 1, 1, 1]
+    ], 4)
+
+  bmp([
+      [1, 1, 0, 0],
+      [0, 1, 1, 1],
+      [0, 1, 0, 1],
+      [0, 1, 1, 1]
+    ], 5)
+
+  bmp([
+      [1, 1, 0, 0, 0, 1],
+      [0, 1, 1, 1, 0, 1],
+      [0, 1, 0, 1, 0, 1],
+      [0, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 0, 0, 1]
+    ])
+
+  bmp([
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0],
+      [0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0],
+      [0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0],
+      [0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0],
+      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+      [1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+      [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+      [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+      [1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+      [1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ], 29)
 
   // *-*
   // | |
@@ -181,6 +273,10 @@ tape("rectilinear-decomposition", function(t) {
     [2,0]
   ]
   test([bracket], true, 2)
-  
+  */
+
+
+
+
   t.end()
 })

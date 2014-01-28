@@ -14,7 +14,9 @@
   "devDependencies": {
     "tape": "~2.3.2",
     "tap": "~0.4.8",
-    "boxoverlap": "0.0.3"
+    "boxoverlap": "0.0.3",
+    "contour-2d": "0.0.0",
+    "ndarray-pack": "~1.0.1"
   },
   "scripts": {
     "test": "tap test/*.js"
