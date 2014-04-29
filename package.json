@@ -1,15 +1,15 @@
 {
   "name": "rectangle-decomposition",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Minimal decomposition of rectilinear polygons into rectangles",
   "main": "decomp.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "bipartite-independent-set": "~0.0.0",
-    "interval-tree-1d": "~0.0.1",
-    "dup": "~0.0.0"
+    "bipartite-independent-set": "^1.0.0",
+    "interval-tree-1d": "^1.0.0",
+    "dup": "^1.0.0"
   },
   "devDependencies": {
     "tape": "~2.3.2",
